@@ -4,18 +4,24 @@ import (
 	"fmt"
 	"github.com/gazercloud/sws/httpserver"
 	"github.com/gazercloud/sws/logger"
+	"github.com/gazercloud/sws/mailserver"
 )
 
 var httpServer *httpserver.HttpServer
+var mailServer *mailserver.MailServer
 
 func Start() {
 	TuneFDs()
 	httpServer = httpserver.NewHttpServer()
 	httpServer.Start()
+
+	mailServer = mailserver.NewMailServer()
+	mailServer.Start()
 }
 
 func Stop() {
 	httpServer.Stop()
+	mailServer.Stop()
 }
 
 func RunDesktop() {
