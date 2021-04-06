@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -164,6 +165,12 @@ func (c *HttpServer) file(w http.ResponseWriter, r *http.Request, urlPath string
 
 	logger.Println("Real IP: ", realIP)
 	logger.Println("HttpServer processFile: ", r.URL.String())
+
+	var urlUnescaped string
+	urlUnescaped, err = url.QueryUnescape(urlPath)
+	if err == nil {
+		urlPath = urlUnescaped
+	}
 
 	if urlPath == "/" || urlPath == "" {
 		urlPath = "/index.html"
