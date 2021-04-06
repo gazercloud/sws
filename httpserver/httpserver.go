@@ -87,7 +87,7 @@ func (c *HttpServer) thListenTLS() {
 
 	c.rTLS = mux.NewRouter()
 	c.rTLS.NotFoundHandler = http.HandlerFunc(c.processFile)
-	c.srvTLS.Handler = c.r
+	c.srvTLS.Handler = c.rTLS
 
 	logger.Println("HttpServerTLS thListen begin")
 	listener, err := tls.Listen("tcp", ":443", tlsConfig)
