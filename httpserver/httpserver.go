@@ -52,7 +52,7 @@ func (c *HttpServer) thListen() {
 	}
 
 	c.r = mux.NewRouter()
-	c.r.NotFoundHandler = http.HandlerFunc(c.processFile)
+	c.r.NotFoundHandler = http.HandlerFunc(c.redirectTLS)
 	c.srv.Handler = c.r
 
 	logger.Println("HttpServer thListen begin")
@@ -61,6 +61,10 @@ func (c *HttpServer) thListen() {
 		logger.Println("HttpServer thListen error: ", err)
 	}
 	logger.Println("HttpServer thListen end")
+}
+
+func (c *HttpServer) redirectTLS(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "https://"+r.Host+r.RequestURI, http.StatusMovedPermanently)
 }
 
 func (c *HttpServer) thListenTLS() {
