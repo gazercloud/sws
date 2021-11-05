@@ -296,6 +296,59 @@ func (c *HttpServer) redirect(w http.ResponseWriter, r *http.Request, url string
 
 func (c *HttpServer) processTemplate(tmp []byte, host string) []byte {
 	tmpString := string(tmp)
+	reInclude := regexp.MustCompile(`\{#.*?#\}`)
+	reVariables := regexp.MustCompile(`\{%.*?%\}`)
+	reVariablesValues := regexp.MustCompile(`\{@.*?@\}`)
+
+	includes := reInclude.FindAllString(tmpString, 100)
+
+	for _, reString := range includes {
+		filePath := strings.ReplaceAll(reString, "{#", "")
+		filePath = strings.ReplaceAll(filePath, "#}", "")
+		url, err := c.fullpath(filePath, host)
+		if err != nil {
+			logger.Println("processTemplate - c.fullpath(filePath) - ", err)
+			continue
+		}
+		fileContent, err := ioutil.ReadFile(url)
+		if err != nil {
+			fileContent = []byte("-")
+		} else {
+			fileContent = c.processTemplate(fileContent, host)
+		}
+		tmpString = strings.ReplaceAll(tmpString, reString, string(fileContent))
+	}
+
+	variables := reVariables.FindAllString(tmpString, 100)
+	vars := make(map[string]string)
+
+	for _, reString := range variables {
+		varString := strings.ReplaceAll(reString, "{%", "")
+		varString = strings.ReplaceAll(varString, "%}", "")
+
+		parts := strings.Split(varString, "=")
+		if len(parts) == 2 {
+			vars[parts[0]] = parts[1]
+		}
+
+		tmpString = strings.ReplaceAll(tmpString, reString, "")
+	}
+
+	variablesValues := reVariablesValues.FindAllString(tmpString, 100)
+	for _, reString := range variablesValues {
+		varString := strings.ReplaceAll(reString, "{@", "")
+		varString = strings.ReplaceAll(varString, "@}", "")
+
+		if value, ok := vars[varString]; ok {
+			tmpString = strings.ReplaceAll(tmpString, reString, value)
+		}
+	}
+
+	return []byte(tmpString)
+}
+
+func (c *HttpServer) processTemplate1(tmp []byte, host string) []byte {
+	tmpString := string(tmp)
 	re := regexp.MustCompile(`\{#.*?#\}`)
 	reResults := re.FindAllString(tmpString, 100)
 	for _, reString := range reResults {
