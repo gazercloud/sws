@@ -73,9 +73,13 @@ func (c *HttpServer) thListenTLS() {
 	dirs, _ := logger.GetDir(c.rootPath)
 	for _, d := range dirs {
 		if d.Dir {
+			logger.Println("loading ...", d.Path+"/ssl/bundle.crt")
+			logger.Println("loading ...", d.Path+"/ssl/private.key")
 			cert, err := tls.LoadX509KeyPair(d.Path+"/ssl/bundle.crt", d.Path+"/ssl/private.key")
 			if err == nil {
 				tlsConfig.Certificates = append(tlsConfig.Certificates, cert)
+			} else {
+				logger.Println("loading certificates error:", err.Error())
 			}
 		}
 	}
