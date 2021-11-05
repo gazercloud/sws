@@ -22,11 +22,12 @@ type Host struct {
 }
 
 type HttpServer struct {
-	srv      *http.Server
-	srvTLS   *http.Server
-	r        *mux.Router
-	rTLS     *mux.Router
-	rootPath string
+	srv          *http.Server
+	srvTLS       *http.Server
+	r            *mux.Router
+	rTLS         *mux.Router
+	rootPath     string
+	hostsWithSSL map[string]bool
 }
 
 func CurrentExePath() string {
@@ -37,6 +38,7 @@ func CurrentExePath() string {
 func NewHttpServer() *HttpServer {
 	var c HttpServer
 	c.rootPath = CurrentExePath() + "/www"
+	c.hostsWithSSL = make(map[string]bool)
 	return &c
 }
 
@@ -52,7 +54,7 @@ func (c *HttpServer) thListen() {
 	}
 
 	c.r = mux.NewRouter()
-	c.r.NotFoundHandler = http.HandlerFunc(c.redirectTLS)
+	c.r.NotFoundHandler = http.HandlerFunc(c.processHTTP)
 	c.srv.Handler = c.r
 
 	logger.Println("HttpServer thListen begin")
@@ -61,6 +63,14 @@ func (c *HttpServer) thListen() {
 		logger.Println("HttpServer thListen error: ", err)
 	}
 	logger.Println("HttpServer thListen end")
+}
+
+func (c *HttpServer) processHTTP(w http.ResponseWriter, r *http.Request) {
+	logger.Println("ProcessHTTP host: ", r.Host)
+	if _, ok := c.hostsWithSSL[r.Host]; ok {
+		http.Redirect(w, r, "https://"+r.Host+r.RequestURI, http.StatusMovedPermanently)
+	}
+	c.processFile(w, r)
 }
 
 func (c *HttpServer) redirectTLS(w http.ResponseWriter, r *http.Request) {
@@ -78,6 +88,8 @@ func (c *HttpServer) thListenTLS() {
 			cert, err := tls.LoadX509KeyPair(d.Path+"/ssl/bundle.crt", d.Path+"/ssl/private.key")
 			if err == nil {
 				tlsConfig.Certificates = append(tlsConfig.Certificates, cert)
+				c.hostsWithSSL[d.Name] = true
+				logger.Println("added SSL host", d.Name)
 			} else {
 				logger.Println("loading certificates error:", err.Error())
 			}
