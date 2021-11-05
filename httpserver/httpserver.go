@@ -43,7 +43,7 @@ func NewHttpServer() *HttpServer {
 func (c *HttpServer) Start() {
 	logger.Println("HttpServer start")
 	go c.thListen()
-	go c.thListenTLS()
+	//go c.thListenTLS()
 }
 
 func (c *HttpServer) thListen() {
