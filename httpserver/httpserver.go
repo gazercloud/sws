@@ -52,7 +52,7 @@ func (c *HttpServer) thListen() {
 	}
 
 	c.r = mux.NewRouter()
-	c.r.NotFoundHandler = http.HandlerFunc(c.redirectTLS)
+	c.r.NotFoundHandler = http.HandlerFunc(c.processFile)
 	c.srv.Handler = c.r
 
 	logger.Println("HttpServer thListen begin")
