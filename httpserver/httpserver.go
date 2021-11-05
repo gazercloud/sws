@@ -43,7 +43,7 @@ func NewHttpServer() *HttpServer {
 func (c *HttpServer) Start() {
 	logger.Println("HttpServer start")
 	go c.thListen()
-	//go c.thListenTLS()
+	go c.thListenTLS()
 }
 
 func (c *HttpServer) thListen() {
@@ -52,7 +52,7 @@ func (c *HttpServer) thListen() {
 	}
 
 	c.r = mux.NewRouter()
-	c.r.NotFoundHandler = http.HandlerFunc(c.processFile)
+	c.r.NotFoundHandler = http.HandlerFunc(c.redirectTLS)
 	c.srv.Handler = c.r
 
 	logger.Println("HttpServer thListen begin")
